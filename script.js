@@ -9,11 +9,11 @@ boundary_heigth = 50;
 
 map = [
     ['-', '-', '-', '-', '-', '-', '-', '-', '-', '-'],
-    ['-', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '-'],
-    ['-', ' ', '-', ' ', '-', '-', '-', '-', ' ', '-'],
-    ['-', ' ', '-', ' ', ' ', ' ', '-', '-', ' ', '-'],
-    ['-', ' ', '-', ' ', '-', ' ', ' ', ' ', ' ', '-'],
-    ['-', ' ', ' ', ' ', ' ', ' ', '-', '-', ' ', '-'],
+    ['-', '.', '.', '.', '.', '.', '.', '.', '.', '-'],
+    ['-', '.', '-', '.', '-', '-', '-', '-', '.', '-'],
+    ['-', '.', '-', '.', '.', '.', '-', '-', '.', '-'],
+    ['-', '.', '-', '.', '-', '.', '.', '.', '.', '-'],
+    ['-', '.', '.', '.', '.', '.', '-', '-', '.', '-'],
     ['-', '-', '-', '-', '-', '-', '-', '-', '-', '-'],
 
 
@@ -39,7 +39,7 @@ class Pacman {
             x: 0,
             y: 0
         }
-        this.radius = 17
+        this.radius = 20
     }
 
     draw() {
@@ -54,6 +54,21 @@ class Pacman {
         this.draw();
         this.position.x += this.velocity.x;
         this.position.y += this.velocity.y;
+    }
+}
+
+class Food {
+    constructor(position) {
+        this.position = position
+        this.radius = 10
+    }
+
+    draw() {
+        ctx.beginPath()
+        ctx.arc(this.position.x, this.position.y, this.radius, 0 * Math.PI, 2 * Math.PI);
+        ctx.lineTo(this.position.x, this.position.y);
+        ctx.fillStyle = "white";
+        ctx.fill();
     }
 }
 
@@ -74,12 +89,20 @@ pacman = new Pacman(pacman_init_position);
 pacman.draw();
 
 boundaries = [];
+foods = [];
 map.forEach((row, index) => {
     row.forEach((symbol, index2) => {
         if (symbol === "-") {
             boundaries.push(new Boundary({
                 x: boundary_width * index2,
                 y: boundary_heigth * index
+            }))
+        }
+
+        if (symbol === ".") {
+            foods.push(new Food({
+                x: boundary_width * index2 + boundary_width / 2,
+                y: boundary_heigth * index + boundary_heigth / 2
             }))
         }
     })
@@ -96,6 +119,10 @@ function animate() {
             pacman.velocity.x = 0;
             pacman.velocity.y = 0;
         }
+    })
+
+    foods.forEach(food => {
+        food.draw();
     })
     pacman.update();
 }
