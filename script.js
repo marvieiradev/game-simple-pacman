@@ -80,6 +80,10 @@ function check_if_collision(mobile, stationary) {
         mobile.position.x - mobile.radius + mobile.velocity.x <= stationary.position.x + stationary.width;
 }
 
+function check_if_food_eaten(pacman, food) {
+    return (Math.hypot(pacman.position.x - food.position.x, pacman.position.y - food.position.y) <= pacman.radius + food.radius)
+}
+
 pacman_init_position = {
     x: boundary_width + boundary_width / 2,
     y: boundary_heigth + boundary_heigth / 2
@@ -121,8 +125,11 @@ function animate() {
         }
     })
 
-    foods.forEach(food => {
+    foods.forEach((food, index) => {
         food.draw();
+        if (check_if_food_eaten(food, pacman)) {
+            foods.splice(index, 1);
+        }
     })
     pacman.update();
 }
@@ -153,19 +160,4 @@ window.addEventListener("keydown", event => {
 
 })
 
-/*
-boundaries = [];
-map.forEach((row, index) => {
-    row.forEach((symbol, index2) => {
-        if (symbol === "-") {
-            boundaries.push(new Boundary({
-                x: boundary_width * index2,
-                y: boundary_heigth * index
-            }))
-        }
-    })
-});
-
-boundaries.forEach(boundary => {
-    boundary.draw();
-})*/
+//28:05
