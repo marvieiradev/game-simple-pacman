@@ -39,7 +39,7 @@ class Pacman {
             x: 0,
             y: 0
         }
-        this.radius = 20
+        this.radius = 15
     }
 
     draw() {
@@ -57,10 +57,36 @@ class Pacman {
     }
 }
 
+class Ghost {
+    constructor(position) {
+        this.position = position
+        this.velocity = {
+            x: 0,
+            y: 0
+        }
+        this.radius = 15;
+        this.prevColl = []
+    }
+
+    draw() {
+        ctx.beginPath()
+        ctx.arc(this.position.x, this.position.y, this.radius, 1.2 * Math.PI, 1.1 * Math.PI);
+        ctx.lineTo(this.position.x, this.position.y);
+        ctx.fillStyle = "red";
+        ctx.fill();
+    }
+
+    update() {
+        this.draw();
+        this.position.x += this.velocity.x;
+        this.position.y += this.velocity.y;
+    }
+}
+
 class Food {
     constructor(position) {
         this.position = position
-        this.radius = 10
+        this.radius = 7.5;
     }
 
     draw() {
@@ -92,6 +118,14 @@ pacman_init_position = {
 pacman = new Pacman(pacman_init_position);
 pacman.draw();
 
+pacman_init_position = {
+    x: boundary_width + boundary_width / 2,
+    y: boundary_heigth + boundary_heigth / 2
+}
+
+ghost = new Ghost(pacman_init_position);
+ghost.draw();
+
 boundaries = [];
 foods = [];
 map.forEach((row, index) => {
@@ -114,8 +148,14 @@ map.forEach((row, index) => {
 
 function animate() {
     requestId = window.requestAnimationFrame(animate);
+
+    if (foods.length === 0) {
+        window.alert("Fim de Jogo!");
+        window.cancelAnimationFrame(requestId);
+    }
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    collisions = [];
     boundaries.forEach(boundary => {
         boundary.draw();
 
@@ -123,7 +163,97 @@ function animate() {
             pacman.velocity.x = 0;
             pacman.velocity.y = 0;
         }
+
+        if (!collision.includes("left") && check_if_collision({
+            ...ghost,
+            velocity: {
+                x: -5,
+                y: 0
+            }
+        }, boundary)) {
+            collisions.push("left");
+        }
+
+        if (!collision.includes("right") && check_if_collision({
+            ...ghost,
+            velocity: {
+                x: 5,
+                y: 0
+            }
+        }, boundary)) {
+            collisions.push("right");
+        }
+
+        if (!collision.includes("botton") && check_if_collision({
+            ...ghost,
+            velocity: {
+                x: 0,
+                y: 5
+            }
+        }, boundary)) {
+            collisions.push("botton");
+        }
+
+        if (!collision.includes("top") && check_if_collision({
+            ...ghost,
+            velocity: {
+                x: 0,
+                y: -5
+            }
+        }, boundary)) {
+            collisions.push("top");
+        }
     })
+
+    if (ghost.prevColl.length < collision.length) {
+        ghost.prevColl = collisions;
+    }
+
+    if (JSON.stringify(ghost.prevColl) !== JSON.stringify(collisions.prevColl)) {
+        if (ghost.velocity.x < 0) {
+            collisions.push("left")
+        }
+
+        if (ghost.velocity.x > 0) {
+            collisions.push("right")
+        }
+
+        if (ghost.velocity.y > 0) {
+            collisions.push("bottom")
+        }
+
+        if (ghost.velocity.y < 0) {
+            collisions.push("top")
+        }
+    }
+
+    paths = [];
+    paths = ghost.prevColl.filter(collision => {
+        return !collisions.includes(collision)
+    })
+
+    direction = paths[Math.floor(Math.random() * paths.len)]
+    if (direction == "top") {
+        ghost.velocity.y = -5;
+        ghost.velocity.x = 0;
+    }
+
+    else if (direction == "bottom") {
+        ghost.velocity.y = 5;
+        ghost.velocity.x = 0;
+    }
+
+    else if (direction == "left") {
+        ghost.velocity.y = 0;
+        ghost.velocity.x = -5;
+    }
+
+    if (direction == "right") {
+        ghost.velocity.y = 0;
+        ghost.velocity.x = 5;
+    }
+
+    ghost.prevColl = [];
 
     foods.forEach((food, index) => {
         food.draw();
@@ -131,6 +261,7 @@ function animate() {
             foods.splice(index, 1);
         }
     })
+    ghost.update();
     pacman.update();
 }
 
