@@ -8,13 +8,13 @@ boundary_width = 50;
 boundary_heigth = 50;
 
 map = [
-    ['-', '-', '-', '-', '-', '-', '-', '-', '-', '-'],
-    ['-', '.', '.', '.', '.', '.', '.', '.', '.', '-'],
-    ['-', '.', '-', '.', '-', '-', '-', '-', '.', '-'],
-    ['-', '.', '-', '.', '.', '.', '-', '-', '.', '-'],
-    ['-', '.', '-', '.', '-', '.', '.', '.', '.', '-'],
-    ['-', '.', '.', '.', '.', '.', '-', '-', '.', '-'],
-    ['-', '-', '-', '-', '-', '-', '-', '-', '-', '-'],
+    ['-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-'],
+    ['-', '.', '.', '.', '.', '.', '.', '.', '.', '.', '-'],
+    ['-', '.', '-', '.', '-', '-', '-', '-', '-', '.', '-'],
+    ['-', '.', '-', '.', '.', '.', '-', '-', '-', '.', '-'],
+    ['-', '.', '-', '.', '-', '.', '.', '.', '.', '.', '-'],
+    ['-', '.', '.', '.', '.', '.', '-', '-', '-', '-', '-'],
+    ['-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-'],
 
 
 ];
@@ -39,7 +39,7 @@ class Pacman {
             x: 0,
             y: 0
         }
-        this.radius = 15
+        this.radius = 20;
     }
 
     draw() {
@@ -61,16 +61,16 @@ class Ghost {
     constructor(position) {
         this.position = position
         this.velocity = {
-            x: 0,
+            x: 5,
             y: 0
         }
-        this.radius = 15;
+        this.radius = 20;
         this.prevColl = []
     }
 
     draw() {
         ctx.beginPath()
-        ctx.arc(this.position.x, this.position.y, this.radius, 1.2 * Math.PI, 1.1 * Math.PI);
+        ctx.arc(this.position.x, this.position.y, this.radius, 0, 2 * Math.PI);
         ctx.lineTo(this.position.x, this.position.y);
         ctx.fillStyle = "red";
         ctx.fill();
@@ -118,12 +118,12 @@ pacman_init_position = {
 pacman = new Pacman(pacman_init_position);
 pacman.draw();
 
-pacman_init_position = {
-    x: boundary_width + boundary_width / 2,
+ghost_init_position = {
+    x: boundary_width * 5 + boundary_width / 2,
     y: boundary_heigth + boundary_heigth / 2
 }
 
-ghost = new Ghost(pacman_init_position);
+ghost = new Ghost(ghost_init_position);
 ghost.draw();
 
 boundaries = [];
@@ -150,6 +150,11 @@ function animate() {
     requestId = window.requestAnimationFrame(animate);
 
     if (foods.length === 0) {
+        window.alert("Você venceu!");
+        window.cancelAnimationFrame(requestId);
+    }
+
+    if (Math.hypot(ghost.position.x - pacman.position.x, ghost.position.y - pacman.position.y) <= ghost.radius + pacman.radius) {
         window.alert("Fim de Jogo!");
         window.cancelAnimationFrame(requestId);
     }
@@ -164,7 +169,7 @@ function animate() {
             pacman.velocity.y = 0;
         }
 
-        if (!collision.includes("left") && check_if_collision({
+        if (!collisions.includes("left") && check_if_collision({
             ...ghost,
             velocity: {
                 x: -5,
@@ -174,7 +179,7 @@ function animate() {
             collisions.push("left");
         }
 
-        if (!collision.includes("right") && check_if_collision({
+        if (!collisions.includes("right") && check_if_collision({
             ...ghost,
             velocity: {
                 x: 5,
@@ -184,7 +189,7 @@ function animate() {
             collisions.push("right");
         }
 
-        if (!collision.includes("botton") && check_if_collision({
+        if (!collisions.includes("botton") && check_if_collision({
             ...ghost,
             velocity: {
                 x: 0,
@@ -194,7 +199,7 @@ function animate() {
             collisions.push("botton");
         }
 
-        if (!collision.includes("top") && check_if_collision({
+        if (!collisions.includes("top") && check_if_collision({
             ...ghost,
             velocity: {
                 x: 0,
@@ -205,11 +210,11 @@ function animate() {
         }
     })
 
-    if (ghost.prevColl.length < collision.length) {
+    if (ghost.prevColl.length < collisions.length) {
         ghost.prevColl = collisions;
     }
 
-    if (JSON.stringify(ghost.prevColl) !== JSON.stringify(collisions.prevColl)) {
+    if (JSON.stringify(ghost.prevColl) !== JSON.stringify(collisions)) {
         if (ghost.velocity.x < 0) {
             collisions.push("left")
         }
@@ -225,35 +230,36 @@ function animate() {
         if (ghost.velocity.y < 0) {
             collisions.push("top")
         }
+
+
+        paths = [];
+        paths = ghost.prevColl.filter(collision => {
+            return !collisions.includes(collision)
+        })
+
+        direction = paths[Math.floor(Math.random() * paths.length)]
+        if (direction == "top") {
+            ghost.velocity.y = -5;
+            ghost.velocity.x = 0;
+        }
+
+        else if (direction == "bottom") {
+            ghost.velocity.y = 5;
+            ghost.velocity.x = 0;
+        }
+
+        else if (direction == "left") {
+            ghost.velocity.y = 0;
+            ghost.velocity.x = -5;
+        }
+
+        else if (direction == "right") {
+            ghost.velocity.y = 0;
+            ghost.velocity.x = 5;
+        }
+
+        ghost.prevColl = [];
     }
-
-    paths = [];
-    paths = ghost.prevColl.filter(collision => {
-        return !collisions.includes(collision)
-    })
-
-    direction = paths[Math.floor(Math.random() * paths.len)]
-    if (direction == "top") {
-        ghost.velocity.y = -5;
-        ghost.velocity.x = 0;
-    }
-
-    else if (direction == "bottom") {
-        ghost.velocity.y = 5;
-        ghost.velocity.x = 0;
-    }
-
-    else if (direction == "left") {
-        ghost.velocity.y = 0;
-        ghost.velocity.x = -5;
-    }
-
-    if (direction == "right") {
-        ghost.velocity.y = 0;
-        ghost.velocity.x = 5;
-    }
-
-    ghost.prevColl = [];
 
     foods.forEach((food, index) => {
         food.draw();
